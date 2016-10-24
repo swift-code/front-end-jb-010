@@ -82,14 +82,76 @@ app.controller('signupCtrl', ['$scope', '$location', '$http',
         console.log("else error");
       }
     });
+
     request.error(function(data){
       console.log(data);
-    });
-  }
+  });
+}
 
   }]);
 
   app.controller('dashboardCtrl', ['$scope', '$location', '$http',
     function ($scope, $location, $http){
+        $scope.getProfileData = function(){
+        var request = $http({
+          method: 'GET',
+          url: URL + 'profile/' + sessionStorage.userId
+        });
+        request.success(function(data){
+          $scope.profileData = angular.fromJson(data);
+        });
+        request.error(function (data) {
+          console.log(data);
 
-    }]);
+        })
+      }
+      $scope.getProfileData();
+
+       $scope.updateProfile = function() {
+       delete $scope.profileData["connectionRequests"];
+       delete $scope.profileData["connections"];
+       delete $scope.profileData["suggestions"];
+       var request = $http({
+           method: "PUT",
+           url: URL + "profile/" + sessionStorage.userId,
+           data: $scope.profileData
+       });
+       request.success(function(data) {
+           $scope.responseMessage = "Update successful.";
+           $("#dashboardMsgModal").modal('show');
+           $scope.getProfileData();
+       });
+       request.error(function(data) {
+           console.log(data);
+       });
+   }
+   $scope.sendConnectRequest = function(receiverId){
+    var request = $http({
+    method: "POST",
+    url: URL + "request/send/" + sessionStorage.userId + "/"+ receiverId
+   });
+   request.success(function(data) {
+      $scope.responseMessage = "request Sent";
+      $("#dashboardMsgModal").modal('show');
+      $scope.getProfileData();
+   });
+   request.error(function(data) {
+      console.log(data);
+   });
+}
+   $scope.acceptRequest = function(requestId){
+     var request = $http({
+       method: "POST",
+       url: URL + 'request/accept/' + requestId
+     });
+
+     request.success(function(data){
+        request.responseMessage = "Accepted request";
+        $('#dashboardMsgModal').modal('show');
+        $scope.getProfileData();
+     });
+     request.error(function(data){
+       console.log(data);
+     });
+   }
+   }]);
